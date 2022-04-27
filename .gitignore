@@ -5,3 +5,4 @@
 *.html
 *files/*
 renv/*
+data/*
