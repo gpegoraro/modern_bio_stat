@@ -1,0 +1,55 @@
+---
+title: "Chapter1"
+format: 
+  html:
+    code-link: true
+    code-fold: true
+    code-tools: true
+editor: visual
+---
+
+```{r}
+#| label: load-packages
+#| warnings: false
+
+library(tidyverse)
+```
+
+```{r}
+theme_set(theme_minimal())
+```
+
+Generate and plot a binomial distribution with p = 0.3 and n = 15
+
+```{r}
+binom_dist <- tibble(success_n = 0:12,
+                     prob  = dbinom(0:12, p = 0.3, size = 15))
+
+glimpse(binom_dist)
+```
+
+)
+
+Plot the binomial distribution
+
+```{r}
+#| label: binomial-bars
+#| echo: false
+ 
+binom_dist %>%
+  ggplot(aes(x = success_n,
+             y = prob)) +
+  geom_bar(stat = "identity",
+           fill = "darkred") +
+  labs(x = "Successes",
+       y = "Probability")
+
+```
+
+### Session Info
+
+```{r}
+#| results: markup
+
+sessionInfo()
+```
