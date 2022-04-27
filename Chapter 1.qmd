@@ -19,11 +19,17 @@ library(tidyverse)
 theme_set(theme_minimal())
 ```
 
+### 1.3.2
+
 Generate and plot a binomial distribution with p = 0.3 and n = 15
 
 ```{r}
-binom_dist <- tibble(success_n = 0:12,
-                     prob  = dbinom(0:12, p = 0.3, size = 15))
+interval <- 0:15
+n <- 15
+p <- 0.3
+
+binom_dist <- tibble(interval = interval,
+                     prob  = dbinom(interval, n, p))
 
 glimpse(binom_dist)
 ```
@@ -35,15 +41,196 @@ Plot the binomial distribution
 ```{r}
 #| label: binomial-bars
 #| echo: false
- 
-binom_dist %>%
-  ggplot(aes(x = success_n,
-             y = prob)) +
-  geom_bar(stat = "identity",
-           fill = "darkred") +
-  labs(x = "Successes",
-       y = "Probability")
 
+plot_mass <- function(df){
+  df %>% ggplot(aes(x = interval, y = prob)) +
+    geom_bar(stat = "identity",
+           fill = "darkred") +
+    labs(x = "Successes",
+       y = "Probability")
+}
+ 
+plot_mass(binom_dist) 
+
+```
+
+#### Question 1.4
+
+```{r}
+dbinom(3, 4, 2/3)
+```
+
+#### Question 1.5
+
+```{r}
+n <- 10000
+p <- 5/10000
+interval <- 0:12
+
+
+binom <- tibble(interval = interval,
+                prob = dbinom(interval, n, p))
+
+pois <- tibble(interval = interval,
+               prob = dpois(interval, n*p))
+
+binom
+pois
+```
+
+```{r}
+#| label: plot1-5
+#| fig-subcap: 
+#|   - "Binomial"
+#|   - "Poission"
+#| layout-ncol: 2
+#| column: page
+
+plot_mass(binom)
+
+plot_mass(pois)
+```
+
+```{r}
+set.seed(123)
+
+n_sim <- 10000
+
+binom <- tibble(result = replicate(10000, sum(rbinom(50, 1, 0.01))))
+
+pois <- tibble(result = rpois(10000, 0.5))
+```
+
+```{r}
+#| label: plot1-3-4
+#| fig-subcap: 
+#|   - "Binomial"
+#|   - "Poission"
+#| layout-ncol: 2
+#| column: page
+
+binom %>%
+  ggplot(aes(x = result)) +
+  geom_bar() +
+  labs(x = "Successes",
+       y = "Density") 
+
+pois %>%
+  ggplot(aes(x = result)) +
+  geom_bar() +
+  labs(x = "Successes",
+       y = "Density") 
+```
+
+## 1.4
+
+Task
+
+```{r}
+cut(runif(20), c(0, 0.125, 0.5, 0.875, 1)) %>% 
+  factor(labels = c("A", "C", "G", "T"))
+```
+
+```{r}
+p <- rep(0.25, 4)
+t(rmultinom(1, prob = p, size = 8))
+```
+
+```{r}
+t(rmultinom(4, prob = p, size = 8))
+```
+
+#### 1.4.1
+
+```{r}
+n <- 180
+p0 <- rep(0.25, 4)
+reps <- 1000
+
+obs0 <- t(rmultinom(reps, prob = p0, size = n))
+
+dim(obs0)
+```
+
+```{r}
+obs0[1:6,]
+```
+
+```{r}
+ exp0 <- p0 * n
+ 
+ exp0
+```
+
+```{r}
+sum((obs0[1,] - exp0)^2/exp0)
+```
+
+```{r}
+sum((obs0[2,] - exp0)^2/exp0)
+```
+
+```{r}
+scaled_residual <- function(observed, expected = p0*n){
+  sum((observed - expected)^2/expected)
+}
+
+scaled_residual(obs0[1,])
+```
+
+```{r}
+S0 <- tibble(s_res = apply(obs0, 1, scaled_residual))
+
+summary(S0)
+```
+
+```{r}
+S0 %>%
+  ggplot(aes(x = s_res)) +
+  geom_histogram(binwidth = 1,
+                 color = "black",
+                 fill = "darkred") +
+  labs(x = "Scaled Residual",
+       y = "Counts")
+```
+
+```{r}
+S0 %>%
+  summarise(q95 = quantile(s_res, 0.95))
+```
+
+```{r}
+pA <- c(3/8, 1/4, 3/12, 1/8)
+sum(pA)
+```
+
+```{r}
+obsA <- t(rmultinom(1000, prob = pA, size = n))
+
+obsA[1:6,]
+```
+
+```{r}
+apply(obsA, 2, mean)
+```
+
+```{r}
+expA <- pA*n
+
+expA
+```
+
+```{r}
+scaled_residual(obsA[1,])
+```
+
+```{r}
+SA <- tibble(s_res = apply(obsA, 1, scaled_residual))
+```
+
+```{r}
+SA %>%
+  summarise(mean(s_res > 7.8))
 ```
 
 ### Session Info
