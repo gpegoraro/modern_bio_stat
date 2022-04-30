@@ -1,5 +1,5 @@
 ---
-title: "Chapter1"
+title: "Chapter 1"
 format: 
   html:
     code-link: true
@@ -261,17 +261,96 @@ pbinom(2, size = 10, prob = 0.3)
 
 ```{r}
 poismax <- function(lambda = 0.5, n = 100, m = 7) {
-  pois <- replicate(100000, max(rpois(n, lambda)))
+  pois <- replicate(1e6, max(rpois(n, lambda)))
   mean(pois > m)
 }
 
 poismax()
 ```
 
-#### 1.5
+#### 1.7
 
 ```{r}
-poismax()
+x <- rpois(100, 3)
+mean(x)
+var(x)
+```
+
+#### 1.8
+
+```{r}
+#| warnings: false
+library("Biostrings")
+library("BSgenome.Celegans.UCSC.ce2")
+Celegans
+```
+
+```{r}
+seqnames(Celegans)
+```
+
+```{r}
+Celegans$chrM
+```
+
+```{r}
+class(Celegans$chrM)
+```
+
+```{r}
+tot <- length(Celegans$chrM)
+
+tot
+```
+
+```{r}
+lfm <- letterFrequency(Celegans$chrM, letters = c("A", "C", "G", "T"))
+
+lfm
+```
+
+```{r}
+lfm/tot
+```
+
+```{r}
+t(rmultinom(1, length(Celegans$chrM), prob = rep(0.25, 4)))
+```
+
+```{r}
+length(Celegans$chrM)/4
+```
+
+```{r}
+oestat <- function(o, e){
+  sum((o-e)^2/e)
+}
+
+oe <- oestat(o = lfm, e = length(Celegans$chrM)/4)
+
+oe
+```
+
+```{r}
+B <- 10000
+n <- length(Celegans$chrM)
+expected <- rep(n/4, 4)
+
+oenull <- 
+  tibble(rep = 1:B, 
+         oenull = replicate(B,
+                            oestat(o = rmultinom(1,
+                                             n , 
+                                             p = rep(0.25, 4)),
+                                   e = expected)))
+```
+
+```{r}
+oenull %>%
+  ggplot(aes(x = oenull,
+             y = ..density..)) +
+      geom_histogram(color = "black",
+                     fill = "darkred")
 ```
 
 ### Session Info
