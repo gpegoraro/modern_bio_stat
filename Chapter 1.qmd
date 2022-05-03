@@ -18,7 +18,7 @@ library(here)
 
 ```{r}
 #| label: set-paths
-theme_set(theme_minimal())
+theme_set(theme_bw())
 ```
 
 ### 1.3.2

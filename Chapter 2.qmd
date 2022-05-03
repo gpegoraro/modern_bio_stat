@@ -1,0 +1,239 @@
+---
+title: "Chapter 2"
+format: 
+  html:
+    code-link: true
+    code-fold: true
+    code-tools: true
+editor: visual
+---
+
+```{r}
+#| label: load-packages
+#| warnings: false
+here::i_am("Chapter 1.qmd")
+library(tidyverse)
+library(vcd)
+library(here)
+```
+
+```{r}
+#| label: set-paths
+theme_set(theme_bw())
+```
+
+```{r}
+load(here("data", "e100.RData"))
+
+str(e100)
+```
+
+```{r}
+e99 <- e100[-which.max(e100)] 
+
+e99_tbl <- tibble(e99 = e99)
+
+glimpse(e99_tbl)
+```
+
+```{r}
+barplot(table(e99), space = 0.8, col = "blue")
+```
+
+```{r}
+gf1 = goodfit(e99, "poisson")
+
+rootogram(gf1, xlab = "", rect_gp = gpar(fill = "blue"))
+```
+
+```{r}
+theor <- rpois(100, 0.05)
+
+gf_theor <- goodfit(100, "pois")
+
+rootogram(gf1, xlab = "", rect_gp = gpar(fill = "chartreuse"))
+```
+
+```{r}
+table(e100)
+```
+
+```{r}
+table(rpois(100, 3))
+```
+
+```{r}
+table(rpois(100, 0.67))
+```
+
+```{r}
+prod(dpois(c(0, 1, 2, 7), lambda = 3) ^ c(58, 34, 7, 1))
+```
+
+### 2.3
+
+```{r}
+loglikelihood <- function(data, lambda){
+  sum(dpois(data, lambda, log = TRUE))
+}
+
+loglik <- tibble(lambdas = seq(0.05, 0.95, length = 100)) %>%
+       mutate(logliks = map_dbl(lambdas, ~ loglikelihood(e100, .x)))
+
+m0 <- mean(e100)
+
+glimpse(loglik)
+```
+
+```{r}
+#| fig-width: 3
+#| fig-height: 4
+loglik %>%
+  ggplot(aes(x = lambdas,
+             y = logliks)) +
+  geom_line(color = "red") +
+  geom_hline(yintercept = loglikelihood(e100, m0),
+             color = "blue") +
+  geom_vline(xintercept = m0,
+             color = "blue") +
+  labs(x = expression(lambda),
+       y = "Log Likelihood")
+```
+
+```{r}
+gf = goodfit(e100, "poisson")
+
+names(gf)
+```
+
+```{r}
+gf$par
+```
+
+### 2.4
+
+```{r}
+p <- seq(0.01, 1, length = 100)
+
+bins <- tibble(p = p) %>%
+  mutate(logliks = dbinom(10, 120, p, log = TRUE))
+```
+
+```{r}
+bins %>%
+  slice(which.max(logliks))
+```
+
+### 2.5.2
+
+```{r}
+#| warnings: false
+library(Biostrings)
+
+staph <- readDNAStringSet(here("data", 
+                               "staphsequence.ffn.txt"),
+                          "fasta")
+
+str(staph)
+```
+
+```{r}
+staph[1]
+```
+
+```{r}
+staph[[1]]
+```
+
+```{r}
+letterFrequency(staph[[1]], letters = "ACGT", OR = 0)
+```
+
+```{r}
+n <- 1362
+p0 <- rep(0.25, 4)
+reps <- 1000
+
+obs0 <- t(rmultinom(reps, prob = p0, size = n))
+
+dim(obs0)
+```
+
+```{r}
+obs0[1:5,]
+```
+
+```{r}
+exp0 <- p0*n
+
+scaled_residual <- function(observed, expected = exp0){
+  sum((observed - expected)^2/expected)
+}
+
+S0 <- tibble(s_res = apply(obs0, 1, scaled_residual))
+
+summary(S0)
+```
+
+```{r}
+S0 %>%
+  ggplot(aes(x = s_res)) +
+  geom_histogram(binwidth = 1,
+                 color = "black",
+                 fill = "darkred") +
+  labs(x = "Scaled Residual",
+       y = "Counts")
+```
+
+```{r}
+S0 %>%
+  summarise(q95 = quantile(s_res, 0.95))
+```
+
+```{r}
+scaled_residual(letterFrequency(staph[[1]], letters = "ACGT", OR = 0))
+```
+
+### 2.9
+
+```{r}
+letter_frq <- t(vapply(staph, 
+                     letterFrequency, 
+                     FUN.VALUE = numeric(4),
+                     letters = "ACGT", 
+                     OR = 0))
+
+rownames(letter_frq) <- paste0("gene", seq(along = staph))
+
+tab10 <- letter_frq[1:10,]
+
+compute_props <- function(x) {x/sum(x)}
+prop10 <- t(apply(tab10, 1, compute_props))
+round(prop10, digits = 2)
+```
+
+```{r}
+p0 <- colMeans(prop10)
+
+p0
+```
+
+```{r}
+cs <- rowSums(tab10)
+
+cs
+```
+
+```{r}
+exp_tab10 <- t(outer(p0, cs, FUN = "*"))
+
+round(exp_tab10)
+```
+
+### Session Info
+
+```{r}
+#| results: markup
+
+sessionInfo()
+```
