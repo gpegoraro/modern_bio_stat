@@ -4,5 +4,4 @@
 .Ruserdata
 *.html
 *files/*
-renv/*
 data/*
